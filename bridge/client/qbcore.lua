@@ -10,11 +10,29 @@ local onLoadedCallbacks = {}
 
 Config.VehicleSource = 'framework'
 
+local function fireCallbacks()
+    for i = 1, #onLoadedCallbacks do
+        CreateThread(function() onLoadedCallbacks[i]() end)
+    end
+end
+
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     playerData   = QBCore.Functions.GetPlayerData()
     playerLoaded = true
-    for i = 1, #onLoadedCallbacks do
-        CreateThread(function() onLoadedCallbacks[i]() end)
+    fireCallbacks()
+end)
+
+-- Handle resource restart while player is already in-game.
+-- FIXED: ESX and QBox bridges had this handler; QBCore was missing it.
+-- Without it, playerLoaded resets to false on resource restart and
+-- Bridge.OnPlayerLoaded callbacks (including the shop-data loader) never fire,
+-- leaving shops and warehouse permanently empty until the player reconnects.
+AddEventHandler('onClientResourceStart', function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then return end
+    playerData = QBCore.Functions.GetPlayerData()
+    if playerData and playerData.citizenid then
+        playerLoaded = true
+        fireCallbacks()
     end
 end)
 
