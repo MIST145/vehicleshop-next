@@ -22,7 +22,14 @@ shared_scripts {
 
 client_scripts {
     'bridge/client/*.lua',
-    'modules/client/*.lua',
+    -- Explicit ordering: main.lua must run first so VehShop = {} exists before
+    -- display.lua, management.lua, and warehouse.lua assign into it.
+    -- Glob expansion on Linux uses inode (creation) order, NOT alphabetical,
+    -- so 'modules/client/*.lua' is unsafe — always enumerate explicitly.
+    'modules/client/main.lua',
+    'modules/client/display.lua',
+    'modules/client/management.lua',
+    'modules/client/warehouse.lua',
 }
 
 server_scripts {
