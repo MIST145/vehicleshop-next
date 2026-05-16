@@ -22,12 +22,16 @@ RegisterNetEvent('esx:playerLoaded', function(xPlayer)
     fireCallbacks()
 end)
 
--- Handle resource restart while player is already in-game
+-- Handle resource restart while player is already in-game.
+-- FIXED: fireCallbacks() was missing — without it, Bridge.OnPlayerLoaded handlers
+-- (including the shop-data loader in main.lua) never fired after a resource restart,
+-- leaving shops/warehouse permanently empty for any player already logged in.
 AddEventHandler('onClientResourceStart', function(resourceName)
     if resourceName ~= GetCurrentResourceName() then return end
     if ESX.IsPlayerLoaded() then
         playerData   = ESX.GetPlayerData()
         playerLoaded = true
+        fireCallbacks()
     end
 end)
 
