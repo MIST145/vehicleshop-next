@@ -1,7 +1,14 @@
--- modules/client/display.lua (unchanged — placement logic is correct)
+-- modules/client/display.lua
 local function getInstructionalScaleform()
+    -- FIXED: lib.requestScaleformMovie(scaleform) was being called with the integer
+    -- handle returned by RequestScaleformMovie instead of a string name.
+    -- ox_lib's lib.requestScaleformMovie(name) calls RequestScaleformMovie(name)
+    -- internally and loops — passing an integer coerces to a bogus string, causing
+    -- it to request a nonexistent scaleform and potentially loop forever or return
+    -- immediately with the actual handle still unloaded.
+    -- Fixed by requesting the scaleform and waiting on HasScaleformMovieLoaded directly.
     local scaleform = RequestScaleformMovie('instructional_buttons')
-    lib.requestScaleformMovie(scaleform)
+    while not HasScaleformMovieLoaded(scaleform) do Wait(0) end
 
     local controls = Config.Controls
     local buttons  = {
