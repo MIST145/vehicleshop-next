@@ -3,6 +3,11 @@ local ShopEntities           = {}
 local warehouseExitPoint     = nil
 local warehouseVehiclePoints = {}
 
+-- FIXED: Forward-declare both functions as locals so neither leaks into _G and
+-- each can reference the other without relying on implicit global lookup.
+local purchaseStockVehicle
+local doPurchaseStock
+
 local function cleanupWarehousePoints()
     for _, point in pairs(warehouseVehiclePoints) do point:remove() end
     warehouseVehiclePoints = {}
@@ -117,9 +122,9 @@ local function enterWarehouse()
     end
 end
 
-local doPurchaseStock
-
-function purchaseStockVehicle(vehicleData)
+-- FIXED: Declared as local (was an implicit global). The forward declaration at the
+-- top of the file allows vehPoint:nearby() to reference it before this definition.
+purchaseStockVehicle = function(vehicleData)
     local shops = VehShop.getShops()
     local pd    = Bridge.GetPlayerData()
     local options = {}
@@ -158,6 +163,7 @@ end
 -- FIXED: No longer reads vehicle props from the warehouse entity.
 -- Uses vehicleData.model directly — warehouse vehicles have no custom props.
 -- This eliminates the stale-entity crash if a warehouse refresh occurs mid-purchase.
+-- FIXED: Declared as local (forward-declared at top of file).
 doPurchaseStock = function(vehicleData, shopKey)
     local shops = VehShop.getShops()
     local shop  = shops[shopKey]
