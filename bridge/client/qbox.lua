@@ -8,10 +8,25 @@ local onLoadedCallbacks = {}
 
 Config.VehicleSource = 'framework'
 
-RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    playerLoaded = true
+local function fireCallbacks()
     for i = 1, #onLoadedCallbacks do
         CreateThread(function() onLoadedCallbacks[i]() end)
+    end
+end
+
+RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
+    playerLoaded = true
+    fireCallbacks()
+end)
+
+-- Handle resource restart while player is already in-game.
+-- FIXED: Without this handler, playerLoaded stays false after a resource restart
+-- and all Bridge.OnPlayerLoaded callbacks (including the shop-data loader) never fire.
+AddEventHandler('onClientResourceStart', function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then return end
+    if LocalPlayer.state.isLoggedIn then
+        playerLoaded = true
+        fireCallbacks()
     end
 end)
 
